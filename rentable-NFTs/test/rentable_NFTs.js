@@ -63,4 +63,29 @@ contract ("RentableNFTs", function (accounts) {
     assert.equal(unexpiredNFTDate, 0, "NFT expiration date is not 0");
     expectEvent(unexpiredTx, "UpdateUser", {tokenId: "3", user: constants.ZERO_ADDRESS, expires: "0"});
     });
+
+    // This test case starts by deploying an instance of the RentableNFTs contract. Then it mints a new NFT, and sets the user and expiration date of the NFT using the setUser function, while passing the token Id, the new user address, the expires date and the msg.sender address. The test case then checks if the "UpdateUser" event is emitted with the correct arguments. Finally, it checks if the NFT user and expiration date are set correctly. 
+    it("should set the NFT's user and expiration date correctly", async () => {
+      const rentableNFTs = await RentableNFTs.deployed();
+      // Mint a new NFT
+      await rentableNFTs.mint("fakeURI");
+      // Set the user and expiration date of the NFT
+      const futureDate = Math.round((new Date().getTime() / 1000) + 3600);
+      const tx = await rentableNFTs.setUser(1, accounts[2], futureDate, {from: accounts[0]});
+
+      // Check if the 'UpdateUser' event is emitted
+      assert.exists(tx.logs.find(log => log.event === "UpdateUser"), "UpdateUser event is not emitted");
+
+      // Check if the NFT user is set correctly
+      const user = await rentableNFTs.userOf(1);
+      assert.equal(user, accounts[2], "NFT user is not correct");
+
+      // Check if the NFT expiration date is set correctly
+      const expires = await rentableNFTs.userExpires(1);
+      assert.equal(expires.toNumber(), futureDate, "NFT expiration date is not correct");
+    });
+
+
+
+
 });
