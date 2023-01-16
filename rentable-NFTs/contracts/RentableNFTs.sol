@@ -19,19 +19,9 @@ contract RentableNFTs is ERC4907 {
     _setTokenURI(newTokenId, _tokenURI); // _setTokenURI is a function from ERC721URIStorage.sol
   }
 
-// function burn(uint256 tokenId) public {
-//     // check if the token is exist
-//     require(tokenExists(tokenId), "The token does not exist");
-//     // check if the msg.sender is the owner of the token or the contract owner
-//     require(userOf(tokenId) == msg.sender || msg.sender == _users[tokenId].owner, "You are not the owner of the token");
-//     // delete the user and expiration date
-//     _users[tokenId].user = address(0);
-//     _users[tokenId].expires = 0;
-//     // emit the UpdateUser event
-//     emit UpdateUser(tokenId,address(0),0);
-// }
-
   function burn(uint256 tokenId) public {
+    emit UpdateUser(tokenId, address(0), 0);
+    _users[tokenId].expires = 0;
     _burn(tokenId);
   }
 

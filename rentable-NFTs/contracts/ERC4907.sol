@@ -10,7 +10,6 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   struct UserInfo {
     address user;
     uint64 expires; // uint64 is for gas perpose
-    address owner;
   }
 
   // It also has a mapping variable named _users that stores the user information for each token ID.
@@ -37,7 +36,7 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   /// @param tokenId The NFT to get the user address for
   /// @return The user address for this NFT
   // The userOf function returns the user address for a specific token ID if the expiration date has not passed.
-  function userOf(uint256 tokenId) public view virtual override returns(address) {
+  function userOf(uint256 tokenId) public view override virtual returns(address) {
     if (uint256(_users[tokenId].expires) >= block.timestamp) {
       return _users[tokenId].user;
     } else {

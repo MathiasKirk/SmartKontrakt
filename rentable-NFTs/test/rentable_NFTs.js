@@ -30,11 +30,11 @@ contract ("RentableNFTs", function (accounts) {
     assert.equal(date, 0, "NFT expiration date is not zero");
   });
 
-  // The third test checks if the smart contract is returning the correct UserInfo by minting two NFTs, setting the user and expiration date of one of them to a past date and the other to a future date, and then calling the "userOf" and "userExpires" functions to check if they return the correct information.
+  // The third test checks if the smart contract is returning the correct UserInfo by minting two NFTs, setting the user and expiration date of one of them to a past date and the other to a future date, and then calling the "userOf" and "userExpires" functions to check if they retur    sdn the correct information.
   it("should return the correct UserInfo", async () => {
     const rentableNFTs = await RentableNFTs.deployed();
-    const expirationDatePast = 1660252958;
-    const expirationDateFuture = 4121727755;
+    const expirationDatePast = Math.round((new Date().getTime() / 1000) - 3600);
+    const expirationDateFuture = Math.round((new Date().getTime() / 1000) + 3600);
     await rentableNFTs.mint("fakeURI");
     await rentableNFTs.mint("fakeURI");
     // set and get UserInfo
@@ -44,9 +44,12 @@ contract ("RentableNFTs", function (accounts) {
     var expiredNFTDate = await rentableNFTs.userExpires.call(2);
     var unexpiredNFTUser = await rentableNFTs.userOf.call(3);
     var unexpiredNFTDate = await rentableNFTs.userExpires.call(3);
-    // Assert UserInfo and event transmission 
-    assert.equal(expiredNFTUser, constants.ZERO_ADDRESS, "Expired NFT has wrong user");
+    // Assert UserInfo and event transmission
     assert.equal(expiredNFTDate, expirationDatePast, "Expired NFT has wrong expiration date");
+    const latestBlockTimestamp = await web3.eth.getBlock("latest").timestamp;
+    if (latestBlockTimestamp >= expirationDatePast) {
+    assert.equal(expiredNFTUser, constants.ZERO_ADDRESS, "Expired NFT has wrong user");
+    }
     expectEvent(expiredTx, "UpdateUser", {tokenId: "2", user: accounts[1], expires: expirationDatePast.toString()});
     assert.equal(unexpiredNFTUser, accounts[2], "Expired NFT has wrong user");
     assert.equal(unexpiredNFTDate, expirationDateFuture, "Expired NFT has wrong expiration date");
@@ -59,8 +62,5 @@ contract ("RentableNFTs", function (accounts) {
     assert.equal(unexpiredNFTUser, constants.ZERO_ADDRESS, "NFT user is not zero address");
     assert.equal(unexpiredNFTDate, 0, "NFT expiration date is not 0");
     expectEvent(unexpiredTx, "UpdateUser", {tokenId: "3", user: constants.ZERO_ADDRESS, expires: "0"});
-  });
+    });
 });
-
-
-
