@@ -85,7 +85,54 @@ contract ("RentableNFTs", function (accounts) {
       assert.equal(expires.toNumber(), futureDate, "NFT expiration date is not correct");
     });
 
+  it("should burn the NFT and remove its user information", async () => {
+    // Deploy the smart contract
+    const rentableNFTs = await RentableNFTs.deployed();
 
+    // Mint a new NFT
+    await rentableNFTs.mint("fakeURI", { from: accounts[0] });
 
+    // Set the user and expiration date of the NFT
+    const futureDate = Math.round((new Date().getTime() / 1000) + 3600);
+    await rentableNFTs.setUser(1, accounts[1], futureDate, { from: accounts[0] });
+
+    // Check if the NFT has a user
+    const user = await rentableNFTs.userOf(1);
+    assert.equal(user, accounts[1], "NFT user is not correct before burn");
+
+    // Burn the NFT
+    await rentableNFTs.burn(1, { from: accounts[0] });
+
+    // Check if the NFT user is set to address(0)
+    const burnedUser = await rentableNFTs.userOf(1);
+    assert.equal(burnedUser, "0x0000000000000000000000000000000000000000", "NFT user is not zero address after burn");
+
+    // Check if the NFT expiration date is set to 0
+    const burnedExpires = await rentableNFTs.userExpires(1);
+    assert.equal(burnedExpires, 0, "NFT expiration date is not zero after burn");
+});
+
+  it("should prevent non-owners from burning the NFT", async () => {
+    // Deploy the smart contract
+    const rentableNFTs = await RentableNFTs.deployed();
+    // Mint a new NFT
+    await rentableNFTs.mint("fakeURI", { from: accounts[0] });
+
+    // Try to burn the NFT as a non-owner
+    try {
+      await rentableNFTs.burn(1, { from: accounts[1] });
+      assert.fail("Burn function should have thrown an error");
+    } catch (error) {
+      assert.include(
+        error.message,
+        "revert",
+        "Burn function did not revert for non-owner"
+      );
+    }
+
+    // Check if the NFT user is still set
+    const user = await rentableNFTs.userOf(1);
+    assert.equal(user, accounts[0], "NFT user was incorrectly burned by non-owner");
+  });
 
 });

@@ -14,6 +14,7 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
 
   // It also has a mapping variable named _users that stores the user information for each token ID.
   mapping(uint256 => UserInfo) internal _users;    // tokenId of NFT (uint256) => UserInfo
+  mapping(uint256 => address) _owners; // store the owner of the token
 
   // The constructor function initializes the token's name and symbol and the setUser function sets the user and expiration date for a specific token ID.
   constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}

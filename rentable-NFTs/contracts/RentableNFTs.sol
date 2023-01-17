@@ -13,16 +13,18 @@ contract RentableNFTs is ERC4907 {
 
   // The mint function is used to create a new token and assign it to the user who called the function.
   function mint(string memory _tokenURI) public {
-    _tokenIds.increment(); // _tokenIds is a Counters.Counter struct, so we can use the increment function to increase the value by 1
-    uint256 newTokenId = _tokenIds.current(); // current returns the current value of the counter
-    _safeMint(msg.sender, newTokenId); // _safeMint is a function from ERC721.sol
-    _setTokenURI(newTokenId, _tokenURI); // _setTokenURI is a function from ERC721URIStorage.sol
-  }
+      _tokenIds.increment(); 
+      uint256 newTokenId = _tokenIds.current(); 
+      _safeMint(msg.sender, newTokenId); 
+      _setTokenURI(newTokenId, _tokenURI); 
+      _owners[newTokenId] = msg.sender;
+    }
 
   function burn(uint256 tokenId) public {
+    require(_owners[tokenId] == msg.sender, "You are not the owner of this token.");
     emit UpdateUser(tokenId, address(0), 0);
     _users[tokenId].expires = 0;
     _burn(tokenId);
-  }
+}
 
 }
