@@ -25,4 +25,11 @@ interface IERC4907 {
     /// @param tokenId The NFT to get the user expires for
     /// @return The user expires for this NFT
     function userExpires(uint256 tokenId) external view returns(uint256);
+
+     /**
+     * @notice Get the user isBorrowed of an NFT.
+     * @param _tokenId uint256 ID of the token to get the user isBorrowed for
+     * @return bool user isBorrowed for this NFT
+     */
+
 }
