@@ -13,12 +13,13 @@ contract RentableNFTs is ERC4907 {
 
   // The mint function is used to create a new token and assign it to the user who called the function.
   function mint(string memory _tokenURI) public {
-      _tokenIds.increment(); 
-      uint256 newTokenId = _tokenIds.current(); 
-      _safeMint(msg.sender, newTokenId); 
-      _setTokenURI(newTokenId, _tokenURI); 
-      _owners[newTokenId] = msg.sender;
-    }
+    _tokenIds.increment();
+    uint256 newTokenId = _tokenIds.current();
+    _safeMint(msg.sender, newTokenId);
+    _setTokenURI(newTokenId, _tokenURI);
+    _owners[newTokenId] = msg.sender;
+    _tokenOfOwner[msg.sender].push(newTokenId);
+  }
 
   function burn(uint256 tokenId) public {
     require(tokenId <= _tokenIds.current(), "Invalid token ID.");

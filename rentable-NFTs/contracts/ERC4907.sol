@@ -15,6 +15,7 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   // It also has a mapping variable named _users that stores the user information for each token ID.
   mapping(uint256 => UserInfo) internal _users;    // tokenId of NFT (uint256) => UserInfo
   mapping(uint256 => address) _owners; // store the owner of the token
+  mapping (address => uint256[]) _tokenOfOwner;
 
   // The constructor function initializes the token's name and symbol and the setUser function sets the user and expiration date for a specific token ID.
   constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
@@ -92,4 +93,15 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   return _users[tokenId].expires > block.timestamp;
   }
 
+  function tokenOfOwnerByIndex(address owner, uint256 index) public view returns(uint256) {
+    require(index < _tokenOfOwner[owner].length, "Index out of range");
+    return _tokenOfOwner[owner][index];
   }
+
+  function balanceOf(address _owner) public view override returns (uint256) {
+    return _tokenOfOwner[_owner].length;
+  }
+  
+
+
+}

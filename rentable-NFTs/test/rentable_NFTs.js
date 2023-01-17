@@ -112,7 +112,15 @@ contract ("RentableNFTs", function (accounts) {
       assert.equal(burnedExpires, 0, "NFT expiration date is not zero after burn");
   });
 
-  
+  it("should return the correct tokenId for a given index", async () => {
+    const rentableNFTs = await RentableNFTs.deployed();
+    await rentableNFTs.mint("fakeURI");
+    await rentableNFTs.mint("fakeURI");
+    const tokenId1 = await rentableNFTs.tokenOfOwnerByIndex(accounts[0],0);
+    const tokenId2 = await rentableNFTs.tokenOfOwnerByIndex(accounts[0],1);
+    assert.equal(tokenId1, 1, "TokenId1 is not correct");
+    assert.equal(tokenId2, 2, "TokenId2 is not correct");
+    });
 
 
 
