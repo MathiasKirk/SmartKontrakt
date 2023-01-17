@@ -112,23 +112,10 @@ contract ("RentableNFTs", function (accounts) {
       assert.equal(burnedExpires, 0, "NFT expiration date is not zero after burn");
   });
 
-  // it("should not allow the user to sell the NFT when renting", async () => {
-  //   // Deploy the smart contract
-  //   const rentableNFTs = await RentableNFTs.deployed();
-  //   // Mint a new NFT
-  //   await rentableNFTs.mint("fakeURI", { from: accounts[0] });
+  
 
-  //   // Set the user and expiration date of the NFT
-  //   const futureDate = Math.round((new Date().getTime() / 1000) + 3600);
-  //   await rentableNFTs.setUser(1, accounts[1], futureDate, { from: accounts[0] });
 
-  //   // Check if the NFT is rented
-  //   const isRented = await rentableNFTs.isRented(1);
-  //   assert.equal(isRented, true, "NFT is not rented before transfer");
 
-  //   // Try to sell the NFT while it is rented
-  //   await expectRevert(rentableNFTs.transferFrom(accounts[1], accounts[2], 1, { from: accounts[1] }), "NFT is rented");
-  // });
 
 
 });
