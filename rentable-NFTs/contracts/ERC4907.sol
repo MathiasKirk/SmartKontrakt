@@ -62,16 +62,34 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
 
   // The _beforeTokenTransfer function is called before a token transfer, it clears the user information if the token is transferred to a different user.
   function _beforeTokenTransfer(address from, address to, uint256, uint256 tokenId) internal virtual override {
-    super._beforeTokenTransfer(from, to, 1, tokenId);
-
-    if (from != to && _users[tokenId].user != address(0) && block.timestamp >= _users[tokenId].expires) {
-      delete _users[tokenId];
-      emit UpdateUser(tokenId, address(0), 0);
-    }
+      super._beforeTokenTransfer(from, to, 1, tokenId);
+      // Check if the user is renting the token before clearing its user information
+      address user = userOf(tokenId);
+      uint256 expires = userExpires(tokenId);
+      if (from != to && user != address(0) && expires < block.timestamp) {
+          delete _users[tokenId];
+          emit UpdateUser(tokenId, address(0), 0);
+      }
   }
 
   function tokenExists(uint256 tokenId) public view returns(bool) {
     return  _users[tokenId].user != address(0);
 }
+
+  // This function is an override of the built-in transferFrom function in the ERC721 standard, it checks if the user is expired before allowing the transfer to proceed, it uses the userExpires function to get the user expiration date, compares it to the block timestamp and if the user is expired it reverts the transaction with a message "User is expired, can't transfer the NFT". It's important to note that this function will only prevent the user from selling the NFT when it is expired, if the user is not expired the transfer will be allowed, you should check if that's the behavior you want.
+  function transferFrom(address from, address to, uint256 tokenId) public virtual override {
+    require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: caller is not owner nor approved"); // require that the caller is the owner or approved
+    // Check if token is currently being rented by a user
+    address user = userOf(tokenId);
+    uint256 expires = userExpires(tokenId);
+    require(user == address(0) || expires < block.timestamp, "NFT is rented");
+    // Perform the transfer
+    _transfer(from, to, tokenId);
+    emit Transfer(from, to, tokenId);
+}
+
+  function isRented(uint256 tokenId) public view returns (bool) {
+  return _users[tokenId].expires > block.timestamp;
+  }
 
   }
