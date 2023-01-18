@@ -21,6 +21,10 @@ contract RentableNFTs is ERC4907 {
     _tokenOfOwner[msg.sender].push(newTokenId);
   }
 
+  function totalSupply() public view returns(uint256) {
+    return _tokenIds.current();
+}
+
   function burn(uint256 tokenId) public {
     require(tokenId <= _tokenIds.current(), "Invalid token ID.");
     require(_users[tokenId].expires > 0, "Invalid token ID.");

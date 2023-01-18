@@ -74,7 +74,13 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   }
 
   function tokenExists(uint256 tokenId) public view returns(bool) {
-    return  _users[tokenId].user != address(0);
+    for(uint i = 0; i < _tokenOfOwner[msg.sender].length; i++){
+        if(_tokenOfOwner[msg.sender][i] == tokenId && _owners[tokenId] != address(0) ){
+            if(msg.sender == _owners[tokenId])
+                return true;
+        }
+    }
+    return false;
 }
 
   // This function is an override of the built-in transferFrom function in the ERC721 standard, it checks if the user is expired before allowing the transfer to proceed, it uses the userExpires function to get the user expiration date, compares it to the block timestamp and if the user is expired it reverts the transaction with a message "User is expired, can't transfer the NFT". It's important to note that this function will only prevent the user from selling the NFT when it is expired, if the user is not expired the transfer will be allowed, you should check if that's the behavior you want.
@@ -102,6 +108,5 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
     return _tokenOfOwner[_owner].length;
   }
   
-
 
 }

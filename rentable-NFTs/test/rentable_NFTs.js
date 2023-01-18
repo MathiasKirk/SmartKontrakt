@@ -131,10 +131,32 @@ contract ("RentableNFTs", function (accounts) {
   });
 
 
+  it("should check if a token exists", async () => {
+    const contract = await RentableNFTs.deployed();
+    // Mint a new token
+    await contract.mint("tokenURI");
+    const tokenId = 1; // assuming the first token minted has an id of 1
+    // Check if the token exists
+    const exists = await contract.tokenExists(tokenId);
+    assert.isTrue(exists, "Token should exist");
+    });
 
-
+    // it("should check if a token does not exist", async () => {
+    //   // Create a new instance of the contract
+    //   const contract = await RentableNFTs.deployed();
+    //   // Mint a new token with a tokenURI
+    //   await contract.mint("example token URI");
+    //   // Get the tokenId of the newly minted token
+    //   const tokenId = await contract._tokenIds();
+    //   // Check if the token exists
+    //   const tokenExists = await contract.tokenExists(tokenId);
+    //   assert.equal(tokenExists, true, "Token should exist");
+    //   // Check if a non-existent token does not exist
+    //   const nonExistentTokenExists = await contract.tokenExists(tokenId + 1);
+    //   assert.equal(nonExistentTokenExists, false, "Non-existent token should not exist");
+    // });
+  });
+    
+    
+    
   
-
-
-
-});
