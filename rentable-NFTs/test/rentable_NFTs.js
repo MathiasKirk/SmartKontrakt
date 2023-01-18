@@ -121,8 +121,19 @@ contract ("RentableNFTs", function (accounts) {
     assert.equal(tokenId1, 1, "TokenId1 is not correct");
     assert.equal(tokenId2, 2, "TokenId2 is not correct");
     });
+    
+    it("should mint a new NFT", async () => {
+      const rentableNFTs = await RentableNFTs.deployed();
+      const initialSupply = await rentableNFTs.balanceOf(accounts[0]); // Check the initial total supply
+      await rentableNFTs.mint("fakeURI");
+      const finalSupply = await rentableNFTs.balanceOf(accounts[0]); // Check the final total supply
+      assert.equal(finalSupply - initialSupply, 1, "A new NFT was not minted");
+  });
 
 
+
+
+  
 
 
 
