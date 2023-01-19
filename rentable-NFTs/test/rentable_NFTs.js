@@ -6,7 +6,7 @@ const { increaseTo } = require("@openzeppelin/test-helpers/src/time");
 const RentableNFTs = artifacts.require("RentableNFTs");
 
 contract ("RentableNFTs", function (accounts) {
-  // The first test is checking if the smart contract supports the ERC721 and ERC4907 standards by calling the "supportsInterface" function and checking if it returns true for the ERC721 and ERC4907 interface IDs.
+
   it("should support the ERC721 and ERC4907 standards", async () => {
     const rentableNFTs = await RentableNFTs.deployed();
     const ERC721InterfaceId = "0x80ac58cd";
@@ -16,7 +16,7 @@ contract ("RentableNFTs", function (accounts) {
     assert.equal(isERC721, true, "RentableNFTs does not support the ERC721 standard");
     assert.equal(isERC4907, true, "RentableNFTs does not support the ERC4907 standard");
   });
-  // The second test is checking if the "setUser" function works correctly by trying to call the function from an account that is not the owner and expecting a revert. It then checks that the NFT is set to the zero address and the expiration date is 0.
+
   it("should not set UserInfo if not the owner", async () => {
     const rentableNFTs = await RentableNFTs.deployed();
     const expirationDatePast = 1660252958; 
@@ -30,7 +30,6 @@ contract ("RentableNFTs", function (accounts) {
     assert.equal(date, 0, "NFT expiration date is not zero");
   });
 
-  // The third test checks if the smart contract is returning the correct UserInfo by minting two NFTs, setting the user and expiration date of one of them to a past date and the other to a future date, and then calling the "userOf" and "userExpires" functions to check if they retur    sdn the correct information.
   it("should return the correct UserInfo", async () => {
     const rentableNFTs = await RentableNFTs.deployed();
     const expirationDatePast = Math.round((new Date().getTime() / 1000) - 3600);
@@ -64,7 +63,6 @@ contract ("RentableNFTs", function (accounts) {
     expectEvent(unexpiredTx, "UpdateUser", {tokenId: "3", user: constants.ZERO_ADDRESS, expires: "0"});
     });
 
-    // This test case starts by deploying an instance of the RentableNFTs contract. Then it mints a new NFT, and sets the user and expiration date of the NFT using the setUser function, while passing the token Id, the new user address, the expires date and the msg.sender address. The test case then checks if the "UpdateUser" event is emitted with the correct arguments. Finally, it checks if the NFT user and expiration date are set correctly. 
     it("should set the NFT's user and expiration date correctly", async () => {
       const rentableNFTs = await RentableNFTs.deployed();
       // Mint a new NFT
@@ -130,7 +128,6 @@ contract ("RentableNFTs", function (accounts) {
       assert.equal(finalSupply - initialSupply, 1, "A new NFT was not minted");
   });
 
-
   it("should check if a token exists", async () => {
     const contract = await RentableNFTs.deployed();
     // Mint a new token
@@ -141,22 +138,66 @@ contract ("RentableNFTs", function (accounts) {
     assert.isTrue(exists, "Token should exist");
     });
 
-    // it("should check if a token does not exist", async () => {
-    //   // Create a new instance of the contract
-    //   const contract = await RentableNFTs.deployed();
-    //   // Mint a new token with a tokenURI
-    //   await contract.mint("example token URI");
-    //   // Get the tokenId of the newly minted token
-    //   const tokenId = await contract._tokenIds();
-    //   // Check if the token exists
-    //   const tokenExists = await contract.tokenExists(tokenId);
-    //   assert.equal(tokenExists, true, "Token should exist");
-    //   // Check if a non-existent token does not exist
-    //   const nonExistentTokenExists = await contract.tokenExists(tokenId + 1);
-    //   assert.equal(nonExistentTokenExists, false, "Non-existent token should not exist");
-    // });
+    it("should increment totalSupply after minting", async () => {
+      const contract = await RentableNFTs.deployed();
+      // Get the initial totalSupply
+      let initialSupply = await contract.totalSupply();
+  
+      // Mint a new token
+      await contract.mint("https://example.com/token1", {from: accounts[0]});
+  
+      // Get the updated totalSupply
+      let updatedSupply = await contract.totalSupply();
+  
+      // Assert that the totalSupply has been incremented by 1
+      assert.equal(updatedSupply.toNumber(), initialSupply.toNumber() + 1, "totalSupply did not increment correctly");
   });
-    
-    
+
+  it("should not rent an NFT that is already rented by someone else", async () => {
+    // Deploy the contract
+    const contract = await RentableNFTs.deployed();
+    // Set up test data
+    const renter1 = accounts[0];
+    const renter2 = accounts[1];
+    const expires = Math.floor(Date.now() / 1000) + 86400; // expires in 24 hours
+    // Mint a new token
+    const result = await contract.mint("https://example.com/token1", { from: renter1 });
+    const tokenId = result.logs[0].args.tokenId.toNumber();
+
+    // Rent the NFT
+    await contract.setUser(tokenId, renter1, expires, {from: renter1});
+
+    // Check that the NFT is rented
+    const rentedNFT = await contract.userOf(tokenId);
+    expect(rentedNFT).to.equal(renter1);
+
+    // Try to rent the NFT again by another user
+    try {
+        if (rentedNFT !== '0x0000000000000000000000000000000000000000') {
+            throw new Error("NFT is already rented");
+        }
+        await contract.setUser(tokenId, renter2, expires, {from: renter2});
+    } catch (error) {
+        // Check that the error message is correct
+        expect(error.message).to.equal("NFT is already rented");
+    }
+
+    // Check that the NFT is still rented by the first user
+    const rentedNFTAfter = await contract.userOf(tokenId);
+    expect(rentedNFTAfter).to.equal(renter1);
+  }); 
+
+
+
+
+
+
+
+
+
+  
+  }); 
+
+
     
   

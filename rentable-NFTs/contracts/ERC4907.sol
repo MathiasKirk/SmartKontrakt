@@ -107,6 +107,7 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   function balanceOf(address _owner) public view override returns (uint256) {
     return _tokenOfOwner[_owner].length;
   }
-  
+
+
 
 }
