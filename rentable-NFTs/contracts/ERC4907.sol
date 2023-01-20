@@ -14,24 +14,27 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
 
   // It also has a mapping variable named _users that stores the user information for each token ID.
   mapping(uint256 => UserInfo) internal _users;    // tokenId of NFT (uint256) => UserInfo
-  mapping(uint256 => address) _owners; // store the owner of the token
-  mapping (address => uint256[]) _tokenOfOwner;
+  mapping(uint256 => address) public _owners; // store the owner of the token
+  mapping (address => uint256[]) public _tokenOfOwner;
 
   // The constructor function initializes the token's name and symbol and the setUser function sets the user and expiration date for a specific token ID.
   constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
+
+  uint256 emptyBytes;
 
   /// @notice set the user and expires of an NFT
   /// @dev The zero address indicates there is no user
   /// Throws if `tokenId` is not valid NFT
   /// @param user  The new user of the NFT
   /// @param expires  UNIX timestamp, The new user could use the NFT before expires
-  function setUser(uint256 tokenId, address user, uint64 expires) public virtual override{ 
-    require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: caller is not owner nor approved"); // require that the caller is the owner or approved
+  function setUser(uint256 tokenId, address user, uint64 expires) public virtual override{
+    require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: caller is not owner nor approved");
+    require(_owners[tokenId] == msg.sender, "Only the owner of the token can set user information");
     UserInfo storage info = _users[tokenId];
     info.user = user;
     info.expires = expires;
-    emit UpdateUser(tokenId, user, expires); // emit event
-  }
+    emit UpdateUser(tokenId, user, expires);
+}
 
   /// @notice Get the user address of an NFT
   /// @dev The zero address indicates that there is no user or the user is expired
@@ -62,16 +65,18 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   }
 
   // The _beforeTokenTransfer function is called before a token transfer, it clears the user information if the token is transferred to a different user.
-  function _beforeTokenTransfer(address from, address to, uint256, uint256 tokenId) internal virtual override {
-      super._beforeTokenTransfer(from, to, 1, tokenId);
-      // Check if the user is renting the token before clearing its user information
-      address user = userOf(tokenId);
-      uint256 expires = userExpires(tokenId);
-      if (from != to && user != address(0) && expires < block.timestamp) {
-          delete _users[tokenId];
-          emit UpdateUser(tokenId, address(0), 0);
-      }
-  }
+  function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual {
+    require(tokenExists(tokenId), "ERC721: invalid token ID");
+    // Call the parent implementation of _beforeTokenTransfer
+    super._beforeTokenTransfer(from, to, tokenId, emptyBytes);
+    // Check if the user is renting the token before clearing its user information
+    address user = userOf(tokenId);
+    uint256 expires = userExpires(tokenId);
+    if (from != to && user != address(0) && expires < block.timestamp) {
+    delete _users[tokenId];
+    emit UpdateUser(tokenId, address(0), 0);
+}
+}
 
   function tokenExists(uint256 tokenId) public view returns(bool) {
     for(uint i = 0; i < _tokenOfOwner[msg.sender].length; i++){
@@ -86,13 +91,17 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   // This function is an override of the built-in transferFrom function in the ERC721 standard, it checks if the user is expired before allowing the transfer to proceed, it uses the userExpires function to get the user expiration date, compares it to the block timestamp and if the user is expired it reverts the transaction with a message "User is expired, can't transfer the NFT". It's important to note that this function will only prevent the user from selling the NFT when it is expired, if the user is not expired the transfer will be allowed, you should check if that's the behavior you want.
   function transferFrom(address from, address to, uint256 tokenId) public virtual override {
     require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: caller is not owner nor approved"); // require that the caller is the owner or approved
-    // Check if token is currently being rented by a user
+    _transfer(from, to, tokenId); // Perform the transfer
+    emit Transfer(from, to, tokenId);
+    // Check if token is currently being rented by a user and if it's being transferred to a different user
     address user = userOf(tokenId);
     uint256 expires = userExpires(tokenId);
-    require(user == address(0) || expires < block.timestamp, "NFT is rented");
-    // Perform the transfer
-    _transfer(from, to, tokenId);
-    emit Transfer(from, to, tokenId);
+    if(user != address(0) && expires >= block.timestamp && from != to) {
+        // clear user information
+        _users[tokenId].user = address(0);
+        _users[tokenId].expires = 0;
+        emit UpdateUser(tokenId, address(0), 0);
+    }
 }
 
   function isRented(uint256 tokenId) public view returns (bool) {
@@ -101,8 +110,10 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
 
   function tokenOfOwnerByIndex(address owner, uint256 index) public view returns(uint256) {
     require(index < _tokenOfOwner[owner].length, "Index out of range");
-    return _tokenOfOwner[owner][index];
-  }
+    uint256 tokenId = _tokenOfOwner[owner][index];
+    require(tokenExists(tokenId), "Invalid token ID");
+    return tokenId;
+}
 
   function balanceOf(address _owner) public view override returns (uint256) {
     return _tokenOfOwner[_owner].length;
