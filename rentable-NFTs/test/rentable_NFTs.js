@@ -247,9 +247,32 @@ contract ("RentableNFTs", function (accounts) {
         }
         });
 
-
-
-
+        it("should prevent unauthorized access to setUser function", async () => {
+          // Deploy the contract
+          const contract = await RentableNFTs.deployed();
+          // Set up test data
+          const owner = accounts[0];
+          const nonOwner = accounts[1];
+          const expiration = 100;
+          // Mint a new token
+          const result = await contract.mint("https://example.com/token1", { from: owner });
+          const tokenId = result.logs[0].args.tokenId.toNumber();
+          // Check that the non-owner cannot set user information for the token
+          try {
+          await contract.setUser(tokenId, nonOwner, expiration, { from: nonOwner });
+          assert.fail("Non-owner was able to set user information for the token");
+          } catch (error) {
+          // Check that the error message is correct
+          assert.isTrue(error.message.startsWith("VM Exception"), "Error should be a VM exception");
+          assert.isTrue(error.message.includes("revert ERC721: caller is not owner nor approved"), "Error should be 'revert ERC721: caller is not owner nor approved' ");
+          // Check that the token still exists
+          const tokenExists = await contract.tokenExists(tokenId);
+          assert.isTrue(tokenExists, "Token should still exist");
+          // Check that the owner of the token is still the original owner
+          const tokenOwner = await contract.ownerOf(tokenId);
+          assert.equal(tokenOwner, owner, "Token should still be owned by the original owner");
+          }
+          });
 
 
 
