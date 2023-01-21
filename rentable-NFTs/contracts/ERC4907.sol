@@ -3,8 +3,13 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./IERC4907.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 
 contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named ERC4907, which inherits from IERC4907 and ERC721URIStorage.
+
+  // SafeERC20 is a library that provides safe transfer functions for ERC20 tokens.
+  using SafeERC20 for IERC20;
 
   // It has a struct named UserInfo that stores information about a user, an address and an expiration timestamp.
   struct UserInfo {
@@ -21,6 +26,7 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
 
   uint256 emptyBytes;
+  event RentNFT(uint256 indexed tokenId, address indexed renter, uint64 rentExpires, uint256 rentPrice);
 
   /// @notice set the user and expires of an NFT
   /// @dev The zero address indicates there is no user
@@ -118,7 +124,5 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   function balanceOf(address _owner) public view override returns (uint256) {
     return _tokenOfOwner[_owner].length;
   }
-
-
-
+ 
 }

@@ -185,20 +185,76 @@ contract ("RentableNFTs", function (accounts) {
     // Check that the NFT is still rented by the first user
     const rentedNFTAfter = await contract.userOf(tokenId);
     expect(rentedNFTAfter).to.equal(renter1);
-  }); 
+      }); 
 
-  it("should check that the token ID is in the _tokenOfOwner mapping", async () => {
-    const rentableNFTs = await RentableNFTs.deployed();
-    await rentableNFTs.mint("fakeURI", {from: accounts[0]});
-    const tokenId = await rentableNFTs.tokenOfOwnerByIndex(accounts[0], 0);
-    assert.notEqual(tokenId, 0, "Token ID was not correctly obtained from tokenOfOwnerByIndex function");
-    const tokenOfOwner = await rentableNFTs._tokenOfOwner(accounts[0], tokenId);
-    assert.isTrue(tokenOfOwner.gte(0), "Token ID is not in the _tokenOfOwner mapping");
-});
+      it("should check that the token ID is in the _tokenOfOwner mapping", async () => {
+        const rentableNFTs = await RentableNFTs.deployed();
+        await rentableNFTs.mint("fakeURI", {from: accounts[0]});
+        const tokenId = await rentableNFTs.tokenOfOwnerByIndex(accounts[0], 0);
+        assert.notEqual(tokenId, 0, "Token ID was not correctly obtained from tokenOfOwnerByIndex function");
+        const tokenOfOwner = await rentableNFTs._tokenOfOwner(accounts[0], tokenId);
+        assert.isTrue(tokenOfOwner.gte(0), "Token ID is not in the _tokenOfOwner mapping");
+    });
+
+    it("should not allow user to burn the NFT that is not the owner", async () => {
+      // Deploy the contract
+      const contract = await RentableNFTs.deployed();
+      // Set up test data
+      const owner = accounts[0];
+      const nonOwner = accounts[1];
+      // Mint a new token
+      const result = await contract.mint("https://example.com/token1", { from: owner });
+      const tokenId = result.logs[0].args.tokenId.toNumber();
+      // Check that the non-owner cannot burn the NFT
+      try {
+      await contract.burn(tokenId, { from: nonOwner });
+      assert.fail("Non-owner was able to burn the NFT");
+      } catch (error) {
+      // Check that the error message is correct
+      assert.isTrue(error.message.startsWith("VM Exception"), "Error should be a VM exception");
+      assert.isTrue(error.message.includes("revert Invalid token ID."), "Error should be invalid token id");
+      // Check that the token still exists
+      const tokenExists = await contract.tokenExists(tokenId);
+      assert.isTrue(tokenExists, "Token should still exist");
+      }
+      });
+
+      it("should not allow user to sell the NFT that is not the owner", async () => {
+        // Deploy the contract
+        const contract = await RentableNFTs.deployed();
+        // Set up test data
+        const owner = accounts[0];
+        const nonOwner = accounts[1];
+        const newOwner = accounts[2];
+        const price = web3.utils.toWei("1", "ether");
+        // Mint a new token
+        const result = await contract.mint("https://example.com/token1", { from: owner });
+        const tokenId = result.logs[0].args.tokenId.toNumber();
+        // Check that the non-owner cannot sell the NFT
+        try {
+        await contract.sellNFT(tokenId, newOwner, price, { from: nonOwner });
+        assert.fail("Non-owner was able to sell the NFT");
+        } catch (error) {
+        // Check that the error message is correct
+        assert.isTrue(error.message.startsWith("VM Exception"), "Error should be a VM exception");
+        assert.isTrue(error.message.includes("Only the owner can sell this NFT."), "Error should be 'Only the owner can sell this NFT.'");
+        // Check that the token still exists
+        const tokenExists = await contract.tokenExists(tokenId);
+        assert.isTrue(tokenExists, "Token should still exist");
+        // Check that the owner of the token is still the original owner
+        const tokenOwner = await contract.ownerOf(tokenId);
+        assert.equal(tokenOwner, owner, "Token should still be owned by the original owner");
+        }
+        });
 
 
 
 
-  
-  }); 
 
+
+
+
+
+
+
+}); 
