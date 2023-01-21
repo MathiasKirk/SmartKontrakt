@@ -4,7 +4,7 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./IERC4907.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "../node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
+import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named ERC4907, which inherits from IERC4907 and ERC721URIStorage.
 
@@ -17,16 +17,16 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
     uint64 expires; // uint64 is for gas perpose
   }
 
+  uint256 emptyBytes;
+
   // It also has a mapping variable named _users that stores the user information for each token ID.
   mapping(uint256 => UserInfo) internal _users;    // tokenId of NFT (uint256) => UserInfo
   mapping(uint256 => address) public _owners; // store the owner of the token
   mapping (address => uint256[]) public _tokenOfOwner;
+  mapping(address => uint256) public _balance;
 
   // The constructor function initializes the token's name and symbol and the setUser function sets the user and expiration date for a specific token ID.
   constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
-
-  uint256 emptyBytes;
-  event RentNFT(uint256 indexed tokenId, address indexed renter, uint64 rentExpires, uint256 rentPrice);
 
   /// @notice set the user and expires of an NFT
   /// @dev The zero address indicates there is no user
@@ -124,5 +124,6 @@ contract ERC4907 is IERC4907, ERC721URIStorage { // The contract itself is named
   function balanceOf(address _owner) public view override returns (uint256) {
     return _tokenOfOwner[_owner].length;
   }
- 
+
+  
 }

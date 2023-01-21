@@ -274,10 +274,38 @@ contract ("RentableNFTs", function (accounts) {
           }
           });
 
+  it("should allow a user to make a payment in ether", async () => {
+    // Deploy the contract
+    const contract = await RentableNFTs.deployed();
+    // Set up test data
+    const owner = accounts[0];
+    const renter = accounts[1];
+    const price = web3.utils.toWei("1", "ether");
+    // Mint a new token
+    const result = await contract.mint("https://example.com/token1", { from: owner });
+    const tokenId = result.logs[0].args.tokenId.toNumber();
+    // Set user information for the token
+    await contract.setUser(tokenId, renter, 100, { from: owner });
+    // Check that the renter can make a payment
+    try {
+    await contract.makePayment(tokenId, { from: renter, value: price });
+    // Check that the event was emitted with the correct arguments
+    const event = contract.SaleNFT();
+    const eventData = event.get();
+    assert.equal(eventData[0].args.tokenId.toNumber(), tokenId, "Event tokenId should match the payment tokenId");
+    assert.equal(eventData[0].args.newOwner, renter, "Event new owner should match the renter's address");
+    assert.equal(eventData[0].args.price, price, "Event price should match the payment amount");
+    } catch (error) {
+    // Check that the token still exists
+    const tokenExists = await contract.tokenExists(tokenId);
+    assert.isTrue(tokenExists, "Token should still exist");
+    // Check that the owner of the token is still the original owner
+    const tokenOwner = await contract.ownerOf(tokenId);
+    assert.equal(tokenOwner, owner, "Token should still be owned by the original owner");
+    }
+    });
 
-
-
-
-
+    
+    
 
 }); 

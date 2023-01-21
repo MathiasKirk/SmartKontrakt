@@ -4,14 +4,14 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./ERC4907.sol";
 import "../node_modules/@openzeppelin/contracts/utils/Counters.sol"; // Counters is a library for managing uint256 IDs
 
-
 contract RentableNFTs is ERC4907 {
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIds; // Counters.Counter is a struct that stores a single uint256 value
   event SaleNFT(uint256 indexed tokenId, address indexed newOwner, uint256 price);
   event LogNewMint(uint256 previousId, uint256 newTokenId, address msgSender);
 
-  constructor() ERC4907("RentableNFTs", "RNFT") {}
+  constructor() ERC4907("RentableNFTs", "RNFT") {
+  }
 
   // The mint function is used to create a new token and assign it to the user who called the function.
   function mint(string memory _tokenURI) public {
@@ -46,6 +46,21 @@ function sellNFT(uint256 tokenId, address newOwner, uint256 price) public {
     _transfer(msg.sender, newOwner, tokenId);
     // Add code here to transfer the price to msg.sender
     emit SaleNFT(tokenId, newOwner, price);
-
 }
+
+function makePayment(uint256 tokenId, address newOwner, uint256 price) public payable {
+    require(msg.sender == _users[tokenId].user, "Only the renter can make a payment.");
+    require(msg.value >= price, "Not enough ether to make the payment.");
+    require(msg.value > 0, "Ether amount should be positive.");
+    require(_users[tokenId].user != address(0), "Token does not exist.");
+    require(_users[tokenId].expires > 0, "Token is not rented.");
+    require(_owners[tokenId] != newOwner, "The token is already owned by the new owner.");
+    require(address(this).balance >= gasleft(), "The smart contract does not have enough ether to cover gas fees.");
+    _transfer(msg.sender, newOwner, tokenId);
+    _users[tokenId].expires = 0;
+    _owners[tokenId] = newOwner;
+    emit SaleNFT(tokenId, newOwner, price);
+}
+
+
 }
