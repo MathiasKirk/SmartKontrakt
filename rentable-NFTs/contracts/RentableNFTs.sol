@@ -48,19 +48,4 @@ function sellNFT(uint256 tokenId, address newOwner, uint256 price) public {
     emit SaleNFT(tokenId, newOwner, price);
 }
 
-function makePayment(uint256 tokenId, address newOwner, uint256 price) public payable {
-    require(msg.sender == _users[tokenId].user, "Only the renter can make a payment.");
-    require(msg.value >= price, "Not enough ether to make the payment.");
-    require(msg.value > 0, "Ether amount should be positive.");
-    require(_users[tokenId].user != address(0), "Token does not exist.");
-    require(_users[tokenId].expires > 0, "Token is not rented.");
-    require(_owners[tokenId] != newOwner, "The token is already owned by the new owner.");
-    require(address(this).balance >= gasleft(), "The smart contract does not have enough ether to cover gas fees.");
-    _transfer(msg.sender, newOwner, tokenId);
-    _users[tokenId].expires = 0;
-    _owners[tokenId] = newOwner;
-    emit SaleNFT(tokenId, newOwner, price);
-}
-
-
 }
