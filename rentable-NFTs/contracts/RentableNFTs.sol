@@ -7,7 +7,6 @@ import "../node_modules/@openzeppelin/contracts/utils/Counters.sol"; // Counters
 contract RentableNFTs is ERC4907 {
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIds; // Counters.Counter is a struct that stores a single uint256 value
-  event SaleNFT(uint256 indexed tokenId, address indexed newOwner, uint256 price);
   event LogNewMint(uint256 previousId, uint256 newTokenId, address msgSender);
 
   constructor() ERC4907("RentableNFTs", "RNFT") {
@@ -40,12 +39,5 @@ contract RentableNFTs is ERC4907 {
     _burn(tokenId);
 }
 
-function sellNFT(uint256 tokenId, address newOwner, uint256 price) public {
-    require(_owners[tokenId] == msg.sender, "Only the owner can sell this NFT.");
-    // Add code here to transfer ownership of the NFT to newOwner
-    _transfer(msg.sender, newOwner, tokenId);
-    // Add code here to transfer the price to msg.sender
-    emit SaleNFT(tokenId, newOwner, price);
-}
 
 }
